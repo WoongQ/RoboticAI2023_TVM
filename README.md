@@ -40,6 +40,8 @@ export PYTHONPATH=$TVM_HOME/python:${PYTHONPATH}
 conda install numpy decorator attrs
 conda install -c conda-forge gcc=11.4.0
 conda install -c conda-forge gxx
+# install pytorch with cuda (https://pytorch.org/get-started/locally/)
+conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
 ```
 Check the tvm successfully installed
 ```
