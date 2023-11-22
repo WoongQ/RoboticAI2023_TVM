@@ -1,5 +1,6 @@
 # RoboticAI2023_TVM
 ## Introduction
+This project introduces methods for optimizing convolution using TVM deep learning compiler.
 ## Installation
 ### Install TVM
 1. Clone the repository
@@ -45,8 +46,21 @@ Check the tvm successfully installed
 import tvm
 ```
 (If there is any problem during installation, see my conda environment in conda/environment.yml or please let me know)
+(Reference: https://tvm.apache.org/docs/install/from_source.html)
 ### Clone this project
 ```
-git clone 
+git clone https://github.com/WoongQ/RoboticAI2023_TVM.git
 ```
-
+## Run the codes
+1. Hand-optimized convolution
+```
+python 1_opt_conv_manual.py
+```
+2. Using AutoTVM
+```
+python 2_opt_conv_autotvm.py
+```
+3. Using AutoScheduler
+```
+python 3_opt_conv_autoscheduler.py
+```
