@@ -109,7 +109,7 @@ s[Y].bind(bz, block_z)
 s[Y].bind(by, block_y)
 s[Y].bind(bx, block_x)
 
-print(tvm.lower(s, [X, Xpad, W, YL, Y], simple_mode=True))
+# print(tvm.lower(s, [X, Xpad, W, YL, Y], simple_mode=True))
 
 ###############################################################################
 # 4. Virtual Thread Mapping
@@ -170,7 +170,7 @@ print("Final schedule")
 print("-------------------------------------------------------------------------------")
 print(tvm.lower(s, [X, Xpad, W, YL, Y], simple_mode=True))
 
-print(tvm.lower(s, [X, Xpad, W, YL, Y], simple_mode=True))
+# print(tvm.lower(s, [X, Xpad, W, YL, Y], simple_mode=True))
 
 ###############################################################################
 # 6. Build convolution kernel
@@ -235,12 +235,19 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 input_tensor = torch.randn(batch, in_channel, in_size, in_size, device=device)
 conv_layer = nn.Conv2d(in_channel, out_channel, kernel_size, stride, pad).to(device)
 
+# Warm-up step
+for _ in range(10):
+    warmup_output = conv_layer(input_tensor)
+torch.cuda.synchronize(device)
+
 # Time the convolution operation
 start_time = time.time()
-output = conv_layer(input_tensor)
+for _ in range(100):  # Running multiple iterations for a more accurate measurement
+    output = conv_layer(input_tensor)
+torch.cuda.synchronize(device)  # Wait for all kernels to finish
 end_time = time.time()
 
-print("Convolution(PyTorch): %f ms" % ((end_time - start_time) * 1e3))
+print("Convolution(PyTorch): %f ms" % ((end_time - start_time) /100 * 1e3))
 
 ###############################################################################
 # 8. TVM convolution evaluation

@@ -49,7 +49,7 @@ tune_option = auto_scheduler.TuningOptions(
 ######################################################################
 
 # Run auto-tuning (search)
-task.tune(tune_option)
+# task.tune(tune_option)
 # Apply the best schedule
 sch, args = task.apply_best(log_file)
 

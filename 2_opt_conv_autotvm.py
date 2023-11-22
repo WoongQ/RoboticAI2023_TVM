@@ -130,11 +130,14 @@ record_file = None
 
 tuner = autotvm.tuner.XGBTuner(task)
 record_file = "conv2d.log"
+
+# Uncomment this if you want to do the tuning
+'''
 tuner.tune(
     n_trial=100,
     measure_option=measure_option,
     callbacks=[autotvm.callback.log_to_file(record_file)],
-)
+)'''
 
 ######################################################################
 # 3. Apply the search result
