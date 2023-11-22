@@ -1,6 +1,7 @@
 import tvm
 from tvm import te
 import numpy as np
+import time
 
 ###############################################################################
 # 1. Define Convolution
@@ -50,13 +51,13 @@ Y = te.compute(
     name="Y",
 )
 
-'''
+# Print out the initial schedule
+print("\n")
 print("-------------------------------------------------------------------------------")
-print("Schedule0")
+print("Initial schedule")
 print("-------------------------------------------------------------------------------")
 s = te.create_schedule([Y.op])
 print(tvm.lower(s, [X, Xpad, W, Y], simple_mode=True))
-'''
 
 ###############################################################################
 # 2. Define Memory Hierarchy: 
@@ -158,6 +159,13 @@ s[WW].bind(ty, thread_y)
 s[WW].bind(tx, thread_x)
 s[WW].vectorize(fi)  # vectorize memory load
 
+# Print out the final schedule
+print("\n")
+print("-------------------------------------------------------------------------------")
+print("Final schedule")
+print("-------------------------------------------------------------------------------")
+print(tvm.lower(s, [X, Xpad, W, YL, Y], simple_mode=True))
+
 ###############################################################################
 # 6. Build convolution kernel
 ###############################################################################
@@ -170,5 +178,52 @@ a = tvm.nd.array(a_np, dev)
 w = tvm.nd.array(w_np, dev)
 b = tvm.nd.array(np.zeros((out_size, out_size, out_channel, batch), dtype=Y.dtype), dev)
 func(a, w, b)
+
+###############################################################################
+# 7. Numpy convolution implementation
+###############################################################################
+
+def conv2d(input, kernel, stride, pad):
+    # Padding
+    input_padded = np.pad(input, ((0, 0), (0, 0), (pad, pad), (pad, pad)), mode='constant')
+
+    # Dimensions of the output
+    batch_size, in_channel, in_height, in_width = input.shape
+    out_channel, _, kernel_height, kernel_width = kernel.shape
+    out_height = (in_height - kernel_height + 2 * pad) // stride + 1
+    out_width = (in_width - kernel_width + 2 * pad) // stride + 1
+
+    # Output tensor
+    output = np.zeros((batch_size, out_channel, out_height, out_width))
+
+    for b in range(batch_size):
+        for k in range(out_channel):
+            for i in range(0, out_height, stride):
+                for j in range(0, out_width, stride):
+                    output[b, k, i, j] = np.sum(input_padded[b, :, i:i+kernel_height, j:j+kernel_width] * kernel[k, :]) 
+
+    return output
+
+###############################################################################
+# 8. Numpy convolution evaluation
+###############################################################################
+print("\n")
+print("-------------------------------------------------------------------------------")
+print("Performance measurement")
+print("-------------------------------------------------------------------------------")
+# Random input and kernel
+input = np.random.rand(batch, in_channel, in_size, in_size)
+kernel = np.random.rand(out_channel, in_channel, kernel_size, kernel_size)
+
+# Time the convolution
+start_time = time.time()
+output = conv2d(input, kernel, stride, pad)
+end_time = time.time()
+print("Convolution(Numpy): %f ms" % ((end_time - start_time) * 1e3))
+
+###############################################################################
+# 8. TVM convolution evaluation
+###############################################################################
+
 evaluator = func.time_evaluator(func.entry_name, dev, number=1)
-print("Convolution: %f ms" % (evaluator(a, w, b).mean * 1e3))
+print("Convolution(TVM): %f ms" % (evaluator(a, w, b).mean * 1e3))
