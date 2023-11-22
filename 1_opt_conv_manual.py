@@ -1,6 +1,8 @@
 import tvm
 from tvm import te
 import numpy as np
+import torch
+import torch.nn as nn
 import time
 
 ###############################################################################
@@ -107,6 +109,8 @@ s[Y].bind(bz, block_z)
 s[Y].bind(by, block_y)
 s[Y].bind(bx, block_x)
 
+print(tvm.lower(s, [X, Xpad, W, YL, Y], simple_mode=True))
+
 ###############################################################################
 # 4. Virtual Thread Mapping
 ###############################################################################
@@ -166,6 +170,8 @@ print("Final schedule")
 print("-------------------------------------------------------------------------------")
 print(tvm.lower(s, [X, Xpad, W, YL, Y], simple_mode=True))
 
+print(tvm.lower(s, [X, Xpad, W, YL, Y], simple_mode=True))
+
 ###############################################################################
 # 6. Build convolution kernel
 ###############################################################################
@@ -180,7 +186,7 @@ b = tvm.nd.array(np.zeros((out_size, out_size, out_channel, batch), dtype=Y.dtyp
 func(a, w, b)
 
 ###############################################################################
-# 7. Numpy convolution implementation
+# 7. Numpy convolution evaluation
 ###############################################################################
 
 def conv2d(input, kernel, stride, pad):
@@ -204,9 +210,6 @@ def conv2d(input, kernel, stride, pad):
 
     return output
 
-###############################################################################
-# 8. Numpy convolution evaluation
-###############################################################################
 print("\n")
 print("-------------------------------------------------------------------------------")
 print("Performance measurement")
@@ -222,8 +225,26 @@ end_time = time.time()
 print("Convolution(Numpy): %f ms" % ((end_time - start_time) * 1e3))
 
 ###############################################################################
+# 8. PyTorch convolution evaluation
+###############################################################################
+print("-------------------------------------------------------------------------------")
+# Check if CUDA is available
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# print(f"Using device: {device}")
+# Create a random input tensor and a convolution layer
+input_tensor = torch.randn(batch, in_channel, in_size, in_size, device=device)
+conv_layer = nn.Conv2d(in_channel, out_channel, kernel_size, stride, pad).to(device)
+
+# Time the convolution operation
+start_time = time.time()
+output = conv_layer(input_tensor)
+end_time = time.time()
+
+print("Convolution(PyTorch): %f ms" % ((end_time - start_time) * 1e3))
+
+###############################################################################
 # 8. TVM convolution evaluation
 ###############################################################################
-
+print("-------------------------------------------------------------------------------")
 evaluator = func.time_evaluator(func.entry_name, dev, number=1)
 print("Convolution(TVM): %f ms" % (evaluator(a, w, b).mean * 1e3))
