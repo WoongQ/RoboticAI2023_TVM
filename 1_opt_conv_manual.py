@@ -12,7 +12,7 @@ import numpy as np
 ###############################################################################
 
 # Convolution dimensions
-batch = 64
+batch = 1
 in_size = 28
 in_channel = 128
 out_channel = 256
@@ -105,7 +105,6 @@ bx, ni = s[Y].split(ni, factor=block_factor)
 s[Y].bind(bz, block_z)
 s[Y].bind(by, block_y)
 s[Y].bind(bx, block_x)
-
 
 ###############################################################################
 # 4. Virtual Thread Mapping
