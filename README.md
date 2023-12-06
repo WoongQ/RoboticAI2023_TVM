@@ -62,10 +62,10 @@ python 1_opt_conv_manual.py
 ```
 python 2_opt_conv_autotvm.py
 ```
-This code uses a log file that I have previously found through auto-tuning. If you want to try tuning yourself, uncomment the "tuner.tune" function in the code and run it.
+This code uses a log file(conv2d.log) that I have previously found through auto-tuning. If you want to try tuning yourself, uncomment the "tuner.tune" function in the code and run it.
 
 3. Using AutoScheduler
 ```
 python 3_opt_conv_autoscheduler.py
 ```
-This code uses a log file that I have previously found through auto-tuning. If you want to try tuning yourself, uncomment the "task.tune" function in the code and run it.
+This code uses a log file(conv2d.json) that I have previously found through auto-tuning. If you want to try tuning yourself, uncomment the "task.tune" function in the code and run it.
